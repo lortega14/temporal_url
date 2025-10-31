@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Portal de facturación – Insetti{% endblock %}
+{% block content %}
+    <section class="card">
+        <h1 class="h1">Prepara tus datos</h1>
+        <p class="p">¡Hola! Vamos a generar tu factura. Solo necesitaremos que confirmes tu información fiscal. Asegúrate de tener listos tu Nombre completo, RFC, Domicilio Fiscal y Código Postal.</p>
+        <br>
+        <p class="pb">RECUERDA: Tu enlace temporal es válido por 72 horas</p>
+        <p><a class="btn" href="{{ temp_link }}">Tengo mis datos listos</a></p>
+    </section>
+{% endblock %}

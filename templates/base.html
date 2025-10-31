@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{% block title %}Insetti – Acceso{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='insetti.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta name="color-scheme" content="light dark">
+</head>
+<body>
+    <main class="page">
+        <div class="logo-box">
+            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Insetti">
+        </div>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
