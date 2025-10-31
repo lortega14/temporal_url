@@ -1,13 +1,17 @@
 # app.py (fragmentos)
 from flask import Flask, redirect, url_for, make_response, render_template, request
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
 # Desactiva caché de estáticos en desarrollo para ver CSS al recargar
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-SECRET_KEY = '...'
+SECRET_KEY = os.getenv('SECRET_KEY')
 GH_PAGE_URL = "https://lortega14.github.io/facturacion_insetti/"
 EXPIRATION_IN_SECONDS = 72 * 60 * 60
 s = URLSafeTimedSerializer(SECRET_KEY)
