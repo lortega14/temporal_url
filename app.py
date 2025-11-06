@@ -12,7 +12,7 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-GH_PAGE_URL = "https://lortega14.github.io/facturacion_insetti/"
+GH_PAGE_URL = "facturacion.insetti.com.mx"
 EXPIRATION_IN_SECONDS = 72 * 60 * 60
 s = URLSafeTimedSerializer(SECRET_KEY)
 
