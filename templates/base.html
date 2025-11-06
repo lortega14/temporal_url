@@ -11,7 +11,9 @@
 <body>
     <main class="page">
         <div class="logo-box">
-            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Insetti">
+            <a href="https://www.insetti.com.mx/" target="_blank" rel="noopener noreferrer" aria-label="Abrir insetti.com.mx en nueva pestaña">
+                <img src="{{ url_for('static', filename='logo.webp') }}" alt="Insetti">
+            </a>
         </div>
         {% block content %}{% endblock %}
     </main>
