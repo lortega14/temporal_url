@@ -1,24 +1,16 @@
-# app.py (fragmentos)
 from flask import Flask, redirect, url_for, make_response, render_template, request
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
-# Desactiva caché de estáticos en desarrollo para ver CSS al recargar
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'tu-clave-secreta-temporal')
 GH_PAGE_URL = "https://lortega14.github.io/facturacion_insetti/"
 EXPIRATION_IN_SECONDS = 72 * 60 * 60
 s = URLSafeTimedSerializer(SECRET_KEY)
 
 @app.after_request
 def add_header(resp):
-    # Evita cacheo agresivo en dev: recargas muestran CSS nuevo
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     resp.headers["Pragma"] = "no-cache"
     return resp
