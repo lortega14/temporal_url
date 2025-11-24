@@ -1,44 +1,37 @@
-from flask import Flask, redirect, url_for, make_response, render_template, request
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
-import os
+from flask import Flask, redirect, request, render_template, make_response
+import jwt, os
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__)
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'tu-clave-secreta-temporal')
+SECRET_KEY = os.getenv('SECRET_KEY')
 GH_PAGE_URL = "https://lortega14.github.io/facturacion_insetti/"
-EXPIRATION_IN_SECONDS = 72 * 60 * 60
-s = URLSafeTimedSerializer(SECRET_KEY)
 
-@app.after_request
-def add_header(resp):
-    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    resp.headers["Pragma"] = "no-cache"
-    return resp
+@app.route('/validar')
+def validate_token():
+    token = request.args.get('token') # Obtenemos el token de la URL
+    
+    if not token:
+        return make_response(render_template('invalid.html'), 404)
+
+    try:
+        # Validamos firma y expiración (JWT lo hace automático con 'exp')
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        order_id = payload['order_id']
+        
+        print(f"Token válido para orden: {order_id}")
+        
+        # Redirige al Formulario Estático pasándole el order_id
+        # El usuario final verá: facturacion.insetti.com.mx/?order_id=12345
+        return redirect(f"{GH_PAGE_URL}?order_id={order_id}")
+        
+    except jwt.ExpiredSignatureError:
+        return make_response(render_template('expired.html'), 410)
+    except jwt.InvalidTokenError:
+        return make_response(render_template('invalid.html'), 404)
 
 @app.route('/')
 def index():
-    data_to_protect = {'user_id': 123, 'form_id': 'A'}
-    token = s.dumps(data_to_protect, salt='form-access')
-    temp_link = url_for('validate_link', token=token, _external=True)
-    return render_template('index.html', temp_link=temp_link)
-
-@app.route('/validar/<token>')
-def validate_link(token):
-    try:
-        data = s.loads(token, salt='form-access', max_age=EXPIRATION_IN_SECONDS)
-        print(f"Token válido. Redirigiendo. Datos: {data}")
-        return redirect(GH_PAGE_URL)
-    except SignatureExpired:
-        print("Intento con token expirado.")
-        return make_response(render_template('expired.html'), 410)
-    except (BadTimeSignature, Exception):
-        print("Intento con token inválido.")
-        return make_response(render_template('invalid.html'), 404)
-
-@app.errorhandler(404)
-def page_not_found(e):
-    print(f"Ruta no encontrada: {e}")
-    return make_response(render_template('invalid.html'), 404)
+    return "Portal de validación de facturas Insetti."
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
