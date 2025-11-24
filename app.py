@@ -31,7 +31,7 @@ def validate_token():
 
 @app.route('/')
 def index():
-    return "Portal de validación de facturas Insetti."
+    return make_response(render_template('invalid.html'), 404)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
