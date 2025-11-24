@@ -6,7 +6,7 @@ app = Flask(__name__)
 SECRET_KEY = os.getenv('SECRET_KEY')
 GH_PAGE_URL = "https://lortega14.github.io/facturacion_insetti/"
 
-@app.route('/validar')
+@app.route('/auth/<token>')
 def validate_token():
     token = request.args.get('token') # Obtenemos el token de la URL
     
