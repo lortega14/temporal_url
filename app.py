@@ -18,11 +18,11 @@ def validate_token():
         # Validamos firma y expiración (JWT lo hace automático con 'exp')
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         
-        order_id = payload.get('order_id')
-        buyer_id = payload.get('buyer_id', '')
-        item = payload.get('item', '')
-        qty = payload.get('qty', 0)
-        price = payload.get('price', 0)
+        order_id = payload.get('o')
+        buyer_id = payload.get('b', '')
+        item = payload.get('i', '')
+        qty = payload.get('q', 0)
+        price = payload.get('p', 0)
         
         print(f"Token válido para orden: {order_id}")
 
