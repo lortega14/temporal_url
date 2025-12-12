@@ -1,45 +1,74 @@
-from flask import Flask, redirect, request, render_template, make_response
+from flask import Flask, redirect, request, render_template, make_response, jsonify
 from urllib.parse import quote
-import jwt, os
+import jwt, os, string, random, redis, json
 
 app = Flask(__name__)
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 GH_PAGE_URL = "https://lortega14.github.io/facturacion_insetti/"
 
-@app.route('/validar')
-def validate_token():
-    token = request.args.get('token') # Obtenemos el token de la URL
+redis_url = os.getenv('KV_URL') or os.getenv('REDIS_URL')
+if not redis_url:
+    redis_client = None
+    print("ADVERTENCIA: No se detectó KV_URL. La app fallará si intentas guardar datos.")
+else:
+    redis_client = redis.from_url(redis_url)
+
+@app.route('/api/shorten', methods=['POST'])
+def crear_link_corto():
+    if not redis_client:
+        return jsonify({"error": "BD no configurada"}), 500
     
-    if not token:
-        return make_response(render_template('invalid.html'), 404)
+    auth = request.headers.get("X-Api-Key")
+    if auth != SECRET_KEY:
+        return jsonify({"error": "No autorizado"}), 401
+    
+    data = request.json
 
+    for _ in range(5):
+        chars = string.ascii_letters + string.digits
+        short_code = ''.join(random.choice(chars) for _ in range(5))
+        if not redis_client.exists(short_code):
+            break
+        else:
+            return jsonify({"error": "No se pudo generar el código"}), 500
+    
     try:
-        # Validamos firma y expiración (JWT lo hace automático con 'exp')
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        
-        order_id = payload.get('o')
-        buyer_id = payload.get('b', '')
-        item = payload.get('i', '')
-        qty = payload.get('q', 0)
-        price = payload.get('p', 0)
-        
-        print(f"Token válido para orden: {order_id}")
+        redis_client.set(
+            name=short_code,
+            value=json.dumps({
+                'o': data.get('o'),
+                'b': data.get('b'),
+                'i': data.get('i'),
+                'q': data.get('q'),
+                'p': data.get('p')
+            }),
+            ex=259200 
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify({"short_url": f"{request.host_url}{short_code}"})
 
+@app.route('/<short_code>')
+def redirect_from_short(short_code):
+    if not redis_client:
+        return "Error de configuración de BD", 500
+
+    raw_data = redis_client.get(short_code)
+
+    if raw_data:
+        link_data = json.loads(raw_data)
         target_url = (
             f"{GH_PAGE_URL}?"
-            f"order_id={order_id}&"
-            f"buyer_id={buyer_id}&"
-            f"item={quote(str(item))}&"
-            f"qty={qty}&"
-            f"price={price}"
+            f"order_id={link_data.get('o')}&"
+            f"buyer_id={link_data.get('b')}&"
+            f"item={quote(str(link_data.get('i') or ''))}&"
+            f"qty={link_data.get('q')}&"
+            f"price={link_data.get('p')}"
         )
-        
         return redirect(target_url)
-    except jwt.ExpiredSignatureError:
-        return make_response(render_template('expired.html'), 410)
-    except jwt.InvalidTokenError:
-        return make_response(render_template('invalid.html'), 404)
+    else:
+        return make_response(render_template('expired.html'), 404)
 
 @app.route('/')
 def index():
